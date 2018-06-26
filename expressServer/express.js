@@ -5,23 +5,38 @@ const express = require('express');
 
 let app = express()
 
+let data = [];
+let dataPath = path.join(__dirname, 'data.json');
 //THIS IS THE CREATION OF THE MIDDLEWARE//
 app.use((req, res, next) => {
     fs.appendFileSync('log.txt', `${req.url}\n`);
     next();
 })
 
-//THIS IS MY BODY PARSER//
-app.use(bodyParser.urlencoded({extended: false}));
-
+//use this instead of Body Parser//
+app.use(express.static(path.join(__dirname, '../public')))
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 //THIS WILL BE MY ROUTE FOR MY RESPONDS WITH RESULTS//
-app.post('/contact-form', (req, res) =>{
-    console.log(req.body.name);
-    console.log(req.body.email);
-    res.send(`${req.body.name}   ${req.body.email}\n`)
-})
-
-
+app.post('/contact-form', (req, err, res) => {
+    fs.readFile(dataPath, 'utf8',(req, err, res, data) => {
+        if (err) {
+            console.log(err);
+            res.status(500);
+        } else {
+            var jsonArray = JSON.parse(data);
+            jsonArray.push(req.body);
+            fs.writeFile(dataPath, JSON.stringify(jsonArray), 'utf8', function (err, res, data) {
+                if (err) {
+                    console.log(err);
+                    res.send('did nit send');
+                } else {
+                    res.send('sent');
+                }
+            });
+        }
+    });
+});
 
 
 
@@ -33,7 +48,24 @@ app.post('/contact-form', (req, res) =>{
 
 
 //THIS WILL BE THE EXPRESS STATIC PATH//
-app.use(express.static(path.join(__dirname, '../public')))
 
 
-app.listen(3000)
+
+// var data = JSON.parse(dataPath);
+// data.push({"teamId":"4","status":"pending"});
+// dataPath = JSON.stringify(obj);
+
+
+
+// fs.readFile(dataPath,{
+//     encoding:"UTF-8"
+// }, (err, data) => {
+//     console.log(data);
+// })
+
+// fs.writeFileSync(dataPath, JSON.stringify(Array), err => {
+//     console.log(err);
+// });
+
+
+app.listen(3003) 
